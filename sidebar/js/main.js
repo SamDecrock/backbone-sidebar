@@ -10,6 +10,13 @@ App = {
 		$("#fuckingcontainer").append(leftsidebar.el); //add it to something
 		$("#fuckingcontainer").append(rightsidebar.el); //add it to something
 
+		var testview1 = new App.TestView({model: new App.TestModel({title: 'Left Sidebar'})});
+		var testview2 = new App.TestView({model: new App.TestModel({title: 'Right Sidebar'})});
+
+		leftsidebar.setView(testview1.render());
+		rightsidebar.setView(testview2.render());
+
+
 		$("#btnShow").click(function (ev){
 			console.log("btnShow append");
 			leftsidebar.show();
@@ -50,7 +57,7 @@ App.TestView = Backbone.View.extend({
 App.Sidebar = Backbone.View.extend({
 	className: "sidebar",
 
-	listeners: {}, //listeners for events
+	currentView: null,
 
 	events: {
 		'release': 'release',
@@ -78,34 +85,6 @@ App.Sidebar = Backbone.View.extend({
 		return this;
 	},
 
-	addListener: function (type, listener){
-		if(!this.listeners[type])
-			this.listeners[type] = [];
-
-		this.listeners[type].push(listener);
-	},
-
-	on: this.addListener,
-
-	removeListener: function (type, listener){
-		if(!this.listeners[type]) return;
-
-		for (var i = this.listeners[type].length - 1; i >= 0; i--) {
-			if( this.listeners[type][i] == listener){
-				this.listeners[type].splice(i, 1);
-				break;
-			}
-		};
-	},
-
-	fireEvent: function(type, event){
-		if(!this.listeners[type]) return;
-
-		for (var i = this.listeners[type].length - 1; i >= 0; i--) {
-			this.listeners[type][i](event);
-		};
-	},
-
 	show: function(){
 		if(this.type == 'right')
 			this.setContainerOffset(-100, true);
@@ -122,7 +101,6 @@ App.Sidebar = Backbone.View.extend({
 
 	drag: function(ev){
         ev.gesture.preventDefault(); // disable browser scrolling
-		console.log("drag: " + ev.gesture.deltaX);
 
 		var drag_offset = (ev.gesture.deltaX*100)/this.$el.width();
 
@@ -144,7 +122,6 @@ App.Sidebar = Backbone.View.extend({
 
 	swipeleft: function(ev){
 		ev.gesture.preventDefault(); // disable browser scrolling
-		console.log("swipeleft");
 		if(this.type == 'left')
 			this.close();
 		ev.gesture.stopDetect();
@@ -153,7 +130,6 @@ App.Sidebar = Backbone.View.extend({
 
 	swiperight: function(ev){
 		ev.gesture.preventDefault(); // disable browser scrolling
-		console.log("swiperight");
 		if(this.type == 'right')
 			this.close();
 		ev.gesture.stopDetect();
@@ -161,17 +137,14 @@ App.Sidebar = Backbone.View.extend({
 
 	release: function(ev){
 		ev.gesture.preventDefault(); // disable browser scrolling
-		console.log("release");
 
 		// more then 50% moved, close
 		if(Math.abs(ev.gesture.deltaX) > this.$el.width()/2) {
 			if(ev.gesture.direction == 'right' && this.type == 'right') {
-				console.log("slide to the right");
 				this.close();
 			}
 
 			if(ev.gesture.direction == 'left' && this.type == 'left') {
-				console.log("slide to the left");
 				this.close();
 			}
 		}
@@ -193,6 +166,12 @@ App.Sidebar = Backbone.View.extend({
 		else {
 			this.$el.css("transform", "translate("+ percent +"%,0)");
 		}
+	},
+
+	setView: function(view) {
+		this.currentView = view;
+		this.$el.empty();
+		this.$el.append(view.el);
 	}
 });
 
